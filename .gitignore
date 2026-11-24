@@ -1,0 +1,6 @@
+# Sistema
+Thumbs.db
+.DS_Store
+
+# Node (o jogo é 100% offline: three.js está em assets/vendor/, sem dependências npm)
+node_modules/

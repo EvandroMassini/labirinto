@@ -1,0 +1,7 @@
+{
+  "name": "labirinto",
+  "version": "1.0.0",
+  "description": "Jogo de terror em primeira pessoa - labirinto (HTML/CSS/JS + Three.js)",
+  "type": "module",
+  "license": "AGPL-3.0"
+}

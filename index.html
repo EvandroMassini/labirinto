@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LABIRINTO — das Sombras</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305060a'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff9040'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./assets/vendor/three.module.js",
+          "three/addons/": "./assets/vendor/addons/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+      <div id="vignette"></div>
+
+      <!-- HUD -->
+      <div id="crosshair"></div>
+      <div id="exit-info">SAÍDA &nbsp;·&nbsp; — m</div>
+      <div id="exit-arrow">&#10148;</div>
+      <div id="hint">
+        WASD mover · Mouse olhar · M minimapa · L lanterna · Encontre a porta
+        vermelha
+      </div>
+      <canvas id="minimap" width="220" height="220"></canvas>
+      <div id="scare-text"></div>
+      <div id="lantern-toast"></div>
+      <div id="fps">— FPS</div>
+
+      <!-- ============ Overlay de início ============ -->
+      <div id="start-overlay" class="overlay">
+        <div class="fx fx-glow" aria-hidden="true"></div>
+        <div class="fx fx-mist fx-mist-a" aria-hidden="true"></div>
+        <div class="fx fx-mist fx-mist-b" aria-hidden="true"></div>
+        <div class="fx fx-embers" aria-hidden="true">
+          <i
+            class="ember"
+            style="
+              --x: 6%;
+              --s: 3px;
+              --d: 9.5s;
+              --dl: 0s;
+              --dx: -26px;
+              --o: 0.75;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 17%;
+              --s: 2px;
+              --d: 8s;
+              --dl: 2.2s;
+              --dx: 18px;
+              --o: 0.6;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 31%;
+              --s: 4px;
+              --d: 11s;
+              --dl: 4.5s;
+              --dx: -12px;
+              --o: 0.85;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 47%;
+              --s: 2.5px;
+              --d: 7.5s;
+              --dl: 1.2s;
+              --dx: 22px;
+              --o: 0.6;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 60%;
+              --s: 3.5px;
+              --d: 10s;
+              --dl: 3.4s;
+              --dx: -20px;
+              --o: 0.8;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 73%;
+              --s: 2px;
+              --d: 8.5s;
+              --dl: 5.6s;
+              --dx: 14px;
+              --o: 0.55;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 86%;
+              --s: 4px;
+              --d: 12s;
+              --dl: 0.8s;
+              --dx: -30px;
+              --o: 0.9;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 94%;
+              --s: 2.5px;
+              --d: 9s;
+              --dl: 2.8s;
+              --dx: 10px;
+              --o: 0.65;
+            "
+          ></i>
+        </div>
+        <div class="fx fx-grain" aria-hidden="true"></div>
+        <div class="fx fx-vignette" aria-hidden="true"></div>
+
+        <div class="panel">
+          <svg
+            class="mark"
+            viewBox="0 0 64 80"
+            width="44"
+            height="56"
+            fill="none"
+            style="--fd: 0.05s"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="fgs" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff3d6" />
+                <stop offset=".5" stop-color="#ffb066" />
+                <stop offset="1" stop-color="#e8622a" />
+              </linearGradient>
+              <radialGradient id="fggs" cx=".5" cy=".62" r=".62">
+                <stop offset="0" stop-color="rgba(255,170,80,.5)" />
+                <stop offset="1" stop-color="rgba(255,170,80,0)" />
+              </radialGradient>
+            </defs>
+            <ellipse cx="32" cy="46" rx="27" ry="31" fill="url(#fggs)" />
+            <path
+              d="M32 6 C37 20 47 26 45 44 C44 58 38 70 32 70 C26 70 19 58 18 44 C16 26 27 20 32 6 Z"
+              fill="url(#fgs)"
+            />
+            <path
+              d="M32 27 C35 35 40 39 39 49 C38 58 35 63 32 63 C29 63 26 58 25 49 C24 39 29 35 32 27 Z"
+              fill="#fff2cf"
+              opacity=".85"
+            />
+          </svg>
+          <h1 class="title" style="--fd: 0.12s">LABIRINTO</h1>
+          <p class="sub" style="--fd: 0.22s">das sombras</p>
+          <div class="rule" style="--fd: 0.32s" aria-hidden="true"></div>
+          <p class="desc" style="--fd: 0.42s">
+            Um labirinto antigo, erguido por mãos que já não existem.<br />
+            A única luz é a das tochas. A única porta é a saída.<br />
+            <em>Não olhe para trás.</em>
+          </p>
+          <ul class="keys" style="--fd: 0.55s">
+            <li>
+              <span class="k wide">W A S D</span><span class="k">Shift</span
+              ><span>mover · correr</span>
+            </li>
+            <li><span class="k">Mouse</span><span>olhar ao redor</span></li>
+            <li><span class="k">M</span><span>minimapa (segure)</span></li>
+            <li>
+              <span class="k">L</span><span>lanterna (liga / desliga)</span>
+            </li>
+          </ul>
+          <button id="btn-start" class="cta" type="button" style="--fd: 0.7s">
+            Entrar no labirinto
+          </button>
+          <div class="badge" style="--fd: 0.85s">
+            <span class="dot"></span>Use fones de ouvido · sons assustadores
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ Overlay de pausa ============ -->
+      <div id="pause-overlay" class="overlay hidden">
+        <div class="fx fx-glow" aria-hidden="true"></div>
+        <div class="fx fx-mist fx-mist-a" aria-hidden="true"></div>
+        <div class="fx fx-mist fx-mist-b" aria-hidden="true"></div>
+        <div class="fx fx-embers" aria-hidden="true">
+          <i
+            class="ember"
+            style="
+              --x: 10%;
+              --s: 3px;
+              --d: 9s;
+              --dl: 0.6s;
+              --dx: -22px;
+              --o: 0.7;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 28%;
+              --s: 2px;
+              --d: 8s;
+              --dl: 2.8s;
+              --dx: 16px;
+              --o: 0.55;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 45%;
+              --s: 4px;
+              --d: 11s;
+              --dl: 1.4s;
+              --dx: -14px;
+              --o: 0.8;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 58%;
+              --s: 2.5px;
+              --d: 7.5s;
+              --dl: 3.8s;
+              --dx: 20px;
+              --o: 0.6;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 72%;
+              --s: 3.5px;
+              --d: 10s;
+              --dl: 0.2s;
+              --dx: -18px;
+              --o: 0.75;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 88%;
+              --s: 2px;
+              --d: 9s;
+              --dl: 4.4s;
+              --dx: 12px;
+              --o: 0.6;
+            "
+          ></i>
+        </div>
+        <div class="fx fx-grain" aria-hidden="true"></div>
+        <div class="fx fx-vignette" aria-hidden="true"></div>
+
+        <div class="panel">
+          <svg
+            class="mark"
+            viewBox="0 0 64 80"
+            width="44"
+            height="56"
+            fill="none"
+            style="--fd: 0.05s"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="fgp" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff3d6" />
+                <stop offset=".5" stop-color="#ffb066" />
+                <stop offset="1" stop-color="#e8622a" />
+              </linearGradient>
+              <radialGradient id="fggp" cx=".5" cy=".62" r=".62">
+                <stop offset="0" stop-color="rgba(255,170,80,.5)" />
+                <stop offset="1" stop-color="rgba(255,170,80,0)" />
+              </radialGradient>
+            </defs>
+            <ellipse cx="32" cy="46" rx="27" ry="31" fill="url(#fggp)" />
+            <path
+              d="M32 6 C37 20 47 26 45 44 C44 58 38 70 32 70 C26 70 19 58 18 44 C16 26 27 20 32 6 Z"
+              fill="url(#fgp)"
+            />
+            <path
+              d="M32 27 C35 35 40 39 39 49 C38 58 35 63 32 63 C29 63 26 58 25 49 C24 39 29 35 32 27 Z"
+              fill="#fff2cf"
+              opacity=".85"
+            />
+          </svg>
+          <h1 class="title" style="--fd: 0.12s">PAUSADO</h1>
+          <div class="rule" style="--fd: 0.24s" aria-hidden="true"></div>
+          <p class="desc" style="--fd: 0.36s">
+            O escuro continua esperando.<br />Ele não tem pressa.
+          </p>
+          <button id="btn-resume" class="cta" type="button" style="--fd: 0.55s">
+            Continuar
+          </button>
+          <p class="pause-hint" style="--fd: 0.7s">
+            A tocha ainda queima ao seu lado.
+          </p>
+        </div>
+      </div>
+
+      <!-- ============ Overlay de vitória ============ -->
+      <div id="win-overlay" class="overlay hidden">
+        <div class="fx fx-glow" aria-hidden="true"></div>
+        <div class="fx fx-mist fx-mist-a" aria-hidden="true"></div>
+        <div class="fx fx-mist fx-mist-b" aria-hidden="true"></div>
+        <div class="fx fx-embers" aria-hidden="true">
+          <i
+            class="ember"
+            style="
+              --x: 8%;
+              --s: 3px;
+              --d: 9.5s;
+              --dl: 0.4s;
+              --dx: -24px;
+              --o: 0.7;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 24%;
+              --s: 2px;
+              --d: 8s;
+              --dl: 2.4s;
+              --dx: 16px;
+              --o: 0.55;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 40%;
+              --s: 4px;
+              --d: 11s;
+              --dl: 1s;
+              --dx: -12px;
+              --o: 0.8;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 56%;
+              --s: 2.5px;
+              --d: 7.5s;
+              --dl: 3.6s;
+              --dx: 20px;
+              --o: 0.6;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 70%;
+              --s: 3.5px;
+              --d: 10s;
+              --dl: 0.8s;
+              --dx: -18px;
+              --o: 0.75;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 84%;
+              --s: 2px;
+              --d: 9s;
+              --dl: 4.6s;
+              --dx: 12px;
+              --o: 0.6;
+            "
+          ></i>
+          <i
+            class="ember"
+            style="
+              --x: 94%;
+              --s: 4px;
+              --d: 12s;
+              --dl: 2s;
+              --dx: -28px;
+              --o: 0.85;
+            "
+          ></i>
+        </div>
+        <div class="fx fx-grain" aria-hidden="true"></div>
+        <div class="fx fx-vignette" aria-hidden="true"></div>
+
+        <div class="panel">
+          <svg
+            class="mark"
+            viewBox="0 0 64 80"
+            width="44"
+            height="56"
+            fill="none"
+            style="--fd: 0.05s"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="fgw" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#fff3d6" />
+                <stop offset=".5" stop-color="#ffb066" />
+                <stop offset="1" stop-color="#e8622a" />
+              </linearGradient>
+              <radialGradient id="fggw" cx=".5" cy=".62" r=".62">
+                <stop offset="0" stop-color="rgba(255,170,80,.5)" />
+                <stop offset="1" stop-color="rgba(255,170,80,0)" />
+              </radialGradient>
+            </defs>
+            <ellipse cx="32" cy="46" rx="27" ry="31" fill="url(#fggw)" />
+            <path
+              d="M32 6 C37 20 47 26 45 44 C44 58 38 70 32 70 C26 70 19 58 18 44 C16 26 27 20 32 6 Z"
+              fill="url(#fgw)"
+            />
+            <path
+              d="M32 27 C35 35 40 39 39 49 C38 58 35 63 32 63 C29 63 26 58 25 49 C24 39 29 35 32 27 Z"
+              fill="#fff2cf"
+              opacity=".85"
+            />
+          </svg>
+          <h1 class="title win-title" style="--fd: 0.12s">VOCÊ ESCAPOU</h1>
+          <div class="rule" style="--fd: 0.24s" aria-hidden="true"></div>
+          <p id="win-time" class="desc win-time" style="--fd: 0.36s"></p>
+          <p class="desc" style="--fd: 0.48s">
+            A luz no fim do túnel… mas, mesmo aqui fora,<br />ainda dá para
+            ouvir algo sussurrando o seu nome no escuro.
+          </p>
+          <button id="btn-again" class="cta" type="button" style="--fd: 0.7s">
+            Jogar novamente
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
