@@ -7,6 +7,14 @@ porta vermelha de saída — e sobreviva ao que anda no escuro.
 HTML + CSS + JavaScript puro, com Three.js **r160** (arquivo local em
 `assets/vendor/` — o jogo roda **offline**, sem CDN).
 
+> **Feito com IA:** o jogo foi desenvolvido por um agente de IA de
+> programação (OpenCode, modelo **Qwen 3.8 27B** via Ollama), sob a direção de
+> Evandro Massini.
+
+## Jogar online
+
+Disponível no GitHub Pages: <https://evandromassini.github.io/labirinto/>
+
 ## Como rodar
 
 Opcional (recomendado): use o servidor local.
